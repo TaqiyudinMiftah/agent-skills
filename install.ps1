@@ -89,17 +89,19 @@ try {
     }
     else {
         $ExistingContent = [System.IO.File]::ReadAllText($AgentsDestination)
-        if ($ExistingContent.Contains($ManagedStart)) {
+        if ($ExistingContent.Contains($ManagedStart) -and $ExistingContent.Contains($ManagedEnd)) {
             $Pattern = "(?s)" + [regex]::Escape($ManagedStart) + ".*?" + [regex]::Escape($ManagedEnd)
-            $Replacement = $TemplateContent.TrimEnd("`r", "`n")
-            $MergedContent = [regex]::Replace($ExistingContent, $Pattern, [System.Text.RegularExpressions.MatchEvaluator]{ param($Match) $Replacement }, 1)
+            $Replacement = $TemplateContent.TrimEnd([char[]]"`r`n")
+            $ManagedRegex = [regex]$Pattern
+            $Evaluator = [System.Text.RegularExpressions.MatchEvaluator]{ param($Match) $Replacement }
+            $MergedContent = $ManagedRegex.Replace($ExistingContent, $Evaluator, 1)
             $MergedPath = Join-Path $TempDirectory "AGENTS.merged.md"
             Write-Utf8File -Path $MergedPath -Content $MergedContent
             Install-OrUpdateFile -SourcePath $MergedPath -DestinationPath $AgentsDestination -Label "AGENTS.md managed block"
         }
         else {
             Backup-ExistingFile -Path $AgentsDestination | Out-Null
-            $AppendedContent = $ExistingContent.TrimEnd("`r", "`n") + "`r`n`r`n" + $TemplateContent
+            $AppendedContent = $ExistingContent.TrimEnd([char[]]"`r`n") + "`r`n`r`n" + $TemplateContent
             Write-Utf8File -Path $AgentsDestination -Content $AppendedContent
             Write-Host "  appended: Sol–Terra block in AGENTS.md"
         }
