@@ -55,42 +55,42 @@ trap 'rm -rf "$TMP_DIR"' EXIT HUP INT TERM
 TIMESTAMP=$(date +%Y%m%d-%H%M%S)
 
 fetch() {
-  remote_path=$1
-  output_path=$2
-  curl -fsSL "$RAW_BASE/$remote_path" -o "$output_path"
+  f_remote_path=$1
+  f_output_path=$2
+  curl -fsSL "$RAW_BASE/$f_remote_path" -o "$f_output_path"
 }
 
 backup_file() {
-  source_path=$1
-  backup_path="$source_path.bak.$TIMESTAMP"
-  counter=1
-  while [ -e "$backup_path" ]; do
-    backup_path="$source_path.bak.$TIMESTAMP.$counter"
-    counter=$((counter + 1))
+  b_source_path=$1
+  b_backup_path="$b_source_path.bak.$TIMESTAMP"
+  b_counter=1
+  while [ -e "$b_backup_path" ]; do
+    b_backup_path="$b_source_path.bak.$TIMESTAMP.$b_counter"
+    b_counter=$((b_counter + 1))
   done
-  cp -p "$source_path" "$backup_path"
-  printf '  backup: %s\n' "$backup_path"
+  cp -p "$b_source_path" "$b_backup_path"
+  printf '  backup: %s\n' "$b_backup_path"
 }
 
 install_or_update() {
-  source_path=$1
-  destination_path=$2
-  label=$3
+  i_source_path=$1
+  i_destination_path=$2
+  i_label=$3
 
-  if [ ! -e "$destination_path" ]; then
-    cp "$source_path" "$destination_path"
-    printf '  installed: %s\n' "$label"
+  if [ ! -e "$i_destination_path" ]; then
+    cp "$i_source_path" "$i_destination_path"
+    printf '  installed: %s\n' "$i_label"
     return
   fi
 
-  if cmp -s "$source_path" "$destination_path"; then
-    printf '  unchanged: %s\n' "$label"
+  if cmp -s "$i_source_path" "$i_destination_path"; then
+    printf '  unchanged: %s\n' "$i_label"
     return
   fi
 
-  backup_file "$destination_path"
-  cp "$source_path" "$destination_path"
-  printf '  updated: %s\n' "$label"
+  backup_file "$i_destination_path"
+  cp "$i_source_path" "$i_destination_path"
+  printf '  updated: %s\n' "$i_label"
 }
 
 echo "Installing Sol–Terra workflow into: $TARGET"
@@ -103,7 +103,8 @@ AGENTS_DEST="$TARGET/AGENTS.md"
 if [ ! -e "$AGENTS_DEST" ]; then
   cp "$AGENTS_TEMPLATE" "$AGENTS_DEST"
   echo "  installed: AGENTS.md"
-elif grep -q '^<!-- sol-terra-workflow:start -->$' "$AGENTS_DEST"; then
+elif grep -q '^<!-- sol-terra-workflow:start -->$' "$AGENTS_DEST" && \
+     grep -q '^<!-- sol-terra-workflow:end -->$' "$AGENTS_DEST"; then
   MERGED_AGENTS="$TMP_DIR/AGENTS.merged.md"
   awk -v replacement="$AGENTS_TEMPLATE" '
     BEGIN { in_managed = 0 }
