@@ -1,0 +1,11 @@
+#:schema https://developers.openai.com/codex/config-schema.json
+
+# Main session: planning, architecture decisions, and final review.
+model = "gpt-5.6-sol"
+model_reasoning_effort = "high"
+
+[agents]
+# Root session plus one executor keeps edits easy to review and avoids overlap.
+max_threads = 2
+# Executors cannot recursively spawn more agents.
+max_depth = 1
